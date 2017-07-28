@@ -49,6 +49,7 @@ Enemy.prototype.reset = function() {
 // a handleInput() method.
 var Player = function() {
     this.sprite = 'images/char-boy.png';
+    this.win = false;
     this.reset();
 };
 
@@ -73,8 +74,11 @@ Player.prototype.reset = function() {
 Player.prototype.handleInput = function(key) {
     switch (key) {
         case 'up':
-            if (this.row > 0) {
+            if (!this.win && this.row > 0) {
                 this.row--;
+            }
+            if (this.row === 0) {
+                this.win = true;
             }
             break;
         case 'down':
@@ -98,11 +102,7 @@ Player.prototype.handleInput = function(key) {
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
-var allEnemies = [];
-for (var i = 0; i < 4; i++) {
-    allEnemies.push(new Enemy);
-}
-
+var allEnemies = [new Enemy];
 var player = new Player;
 
 // This listens for key presses and sends the keys to your

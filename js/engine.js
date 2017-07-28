@@ -29,6 +29,9 @@ var Engine = (function(global) {
     canvas.height = 606;
     doc.body.appendChild(canvas);
 
+    // The requestAnimationFrame return id
+    var animationId = null;
+
     /* This function serves as the kickoff point for the game loop itself
      * and handles properly calling the update and render methods.
      */
@@ -56,7 +59,18 @@ var Engine = (function(global) {
         /* Use the browser's requestAnimationFrame function to call this
          * function again as soon as the browser is able to draw another frame.
          */
-        win.requestAnimationFrame(main);
+        animationId = win.requestAnimationFrame(main);
+        
+        // pause the game and reset player and enemies
+        if (player.win) {
+            win.cancelAnimationFrame(animationId);
+
+            setTimeout(function() {
+                player.win = false;
+                allEnemies.push(new Enemy); // increases the number of enemies
+                init();
+            }, 500);
+        }
     }
 
     /* This function does some initial setup that should only occur once,
@@ -80,7 +94,7 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
-        // checkCollisions();
+        checkCollisions();
     }
 
     /* This is called by the update function and loops through all of the
@@ -95,6 +109,26 @@ var Engine = (function(global) {
             enemy.update(dt);
         });
         player.update();
+    }
+    
+    // Check if the player and an enemy are overlapped
+    function checkCollisions() {
+        var enemyLeft, 
+            enemyRight, 
+            playerLeft = player.x + 22, 
+            playerRight = player.x + 78;
+        
+        allEnemies.forEach(function(enemy) {
+            enemyLeft = enemy.x;
+            enemyRight = enemy.x + 100;
+            if (
+                enemy.row === player.row && 
+                ((enemyRight >= playerLeft && enemyRight <= playerRight) ||
+                (enemyLeft >= playerLeft && enemyLeft <= playerRight))
+            ) {
+                player.reset();
+            }
+        });
     }
 
     /* This function initially draws the "game level", it will then call
@@ -137,6 +171,7 @@ var Engine = (function(global) {
         }
 
         renderEntities();
+        renderInfo();
     }
 
     /* This function is called by the render function and is called on each game
@@ -159,7 +194,18 @@ var Engine = (function(global) {
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        // noop
+        player.reset();
+        allEnemies.forEach(function(enemy) {
+            enemy.reset();
+        });
+    }
+
+    /**
+     * Render information like status and points
+     */
+    function renderInfo() {
+        ctx.font = "bold 20px Arial";
+        ctx.fillText("Bugs: " + allEnemies.length, 10, 100);
     }
 
     /* Go ahead and load all of the images we know we're going to need to
